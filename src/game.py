@@ -1,5 +1,6 @@
 """Main game loop and event handling."""
 import pygame
+import time
 
 from src.configs import SIZE_SQUARE, COLORS_MOVES_BOARD
 from src.assets import (
@@ -10,6 +11,7 @@ from src.assets import (
     white_bishop_image, black_bishop_image
 )
 from src.menu import MainMenu, EndGameMenu
+from src.player_ai import PlayerAI
 
 
 class Game:
@@ -63,6 +65,9 @@ class Game:
         
         self.player_color = 1  # 1 for white, -1 for black (player's chosen color)
         self.board_flipped = False  # True when board is displayed from black's perspective
+        
+        # AI player (initialized when AI game starts)
+        self.ai_player = None
 
         # Initialize professional menus
         self._init_menus()
@@ -121,6 +126,10 @@ class Game:
         self.player_color = self.main_menu.get_selected_color()
         self.board_flipped = (self.player_color == -1)  # Flip board if player chose black
         
+        # Initialize AI with opposite color
+        ai_color = -self.player_color
+        self.ai_player = PlayerAI(ai_color, self.piece._game_state)
+        
         # If player chose black (-1), AI plays white first
         if self.player_color == -1:
             self.white_turn = True  # White's turn (AI)
@@ -169,6 +178,11 @@ class Game:
         new_game_state = initialize_game()
         
         self.piece._game_state = new_game_state
+        
+        # Reinitialize AI if in AI mode
+        if self.IA and self.ai_player:
+            self.ai_player = PlayerAI(-self.player_color, new_game_state)
+        
         self.update_moves_first_turn()
 
     def play_music(self, move_type: str):
@@ -427,6 +441,11 @@ class Game:
                                 original_move_type, game_state_type
                             )
                             self.play_music(final_sound)
+                            
+                            # If AI mode and not game over, render the player's move before AI plays
+                            if self.IA and self.turn_IA and not self.end_menu:
+                                self.display_game()
+                                pygame.display.update()
 
                         # Invalid move - restore piece
                         else:
@@ -435,9 +454,48 @@ class Game:
                             self.color_player = None  # Clear selection highlight only
 
                 # AI turn
-                if self.IA and self.turn_IA:
-                    # IA must play => TODO
-                    self.turn_IA = False
+                if self.IA and self.turn_IA and self.ai_player:
+                    # Small delay for better UX (so player can see AI is "thinking")
+                    time.sleep(0.1)  # 100ms delay
+                    
+                    # Get AI move
+                    ai_move = self.ai_player.play()
+                    
+                    if ai_move is not None:
+                        from_tile, to_tile = ai_move
+                        ai_piece = self.piece._game_state.board[from_tile[0]][from_tile[1]]
+                        
+                        # Execute AI move
+                        original_move_type = ai_piece.move_piece(from_tile, to_tile)
+                        
+                        # Update game state
+                        self.white_turn = not self.white_turn
+                        self.turn_IA = False
+                        
+                        # Update colored tiles to show AI's move
+                        self.list_colors_player[0] = from_tile
+                        self.list_colors_player[1] = to_tile
+                        self.color_player = None
+                        
+                        # Update available moves and check game state
+                        game_state_type = self.piece.update_available_moves(ai_piece)
+                        
+                        # Check for game over
+                        if game_state_type in ("checkmate", "stalemate"):
+                            if game_state_type == "checkmate":
+                                # AI just moved, so if it's checkmate, AI wins
+                                self.winner = self.ai_player.color
+                            else:
+                                self.winner = 0  # Draw
+                            self.end_menu = True
+                            self.end_game_menu.show(self.winner)
+                        
+                        # Play sound
+                        final_sound = self._determine_final_sound(original_move_type, game_state_type)
+                        self.play_music(final_sound)
+                    else:
+                        # No legal moves for AI (shouldn't happen in normal play)
+                        self.turn_IA = False
 
             # End game screen
             else:

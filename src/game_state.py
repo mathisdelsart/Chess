@@ -4,8 +4,7 @@ GameState class that encapsulates the complete state of a chess game.
 from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.piece import Piece
-    from src.all_pieces import King
+    from src.piece import Piece, King
 
 
 def initialize_game() -> 'GameState':
@@ -37,6 +36,10 @@ class GameState:
         self._black_pieces: List['Piece'] = []
         self._white_king: Optional['King'] = None
         self._black_king: Optional['King'] = None
+        
+        # Dictionaries for cleaner color-based access
+        self._pieces = {1: self._white_pieces, -1: self._black_pieces}
+        self._kings = {1: None, -1: None}
 
     def get_piece_at(self, row: int, col: int) -> Optional['Piece']:
         """Get piece at given board position."""
@@ -51,18 +54,15 @@ class GameState:
 
     def get_pieces_by_color(self, color: int) -> List['Piece']:
         """Get all pieces of a given color (1 for white, -1 for black)."""
-        if color == 1:
-            return self._white_pieces
-        return self._black_pieces
+        return self._pieces[color]
 
     def get_king(self, color: int) -> Optional['King']:
         """Get the king of the specified color."""
-        if color == 1:
-            return self._white_king
-        return self._black_king
+        return self._kings[color]
 
     def set_king(self, color: int, king: 'King') -> None:
         """Set the king reference for a color."""
+        self._kings[color] = king
         if color == 1:
             self._white_king = king
         else:
@@ -70,30 +70,18 @@ class GameState:
 
     def add_piece(self, piece: 'Piece') -> None:
         """Add a piece to the appropriate list."""
-        if piece is None:
-            return
-        if piece.color == 1:
-            if piece not in self._white_pieces:
-                self._white_pieces.append(piece)
-        else:
-            if piece not in self._black_pieces:
-                self._black_pieces.append(piece)
+        if piece is not None and piece not in self._pieces[piece.color]:
+            self._pieces[piece.color].append(piece)
 
     def remove_piece(self, piece: 'Piece') -> None:
         """Remove a piece from the game."""
-        if piece is None:
-            return
-        if piece.color == 1:
-            if piece in self._white_pieces:
-                self._white_pieces.remove(piece)
-        else:
-            if piece in self._black_pieces:
-                self._black_pieces.remove(piece)
+        if piece is not None and piece in self._pieces[piece.color]:
+            self._pieces[piece.color].remove(piece)
 
     def setup_initial_position(self) -> None:
         """Set up the initial chess position."""
         # Import here to avoid circular imports
-        from src.all_pieces import Rook, Knight, Bishop, Queen, King, Pawn
+        from src.piece import Rook, Knight, Bishop, Queen, King, Pawn
 
         # Clear existing state
         self.board = [[None] * 8 for _ in range(8)]
@@ -109,6 +97,7 @@ class GameState:
         # Black pieces (row 0)
         black_king = King((0, 4), -1, rook_black_left, rook_black_right, self)
         self._black_king = black_king
+        self._kings[-1] = black_king
 
         self.board[0] = [
             rook_black_left,
@@ -134,6 +123,7 @@ class GameState:
         # White pieces (row 7)
         white_king = King((7, 4), 1, rook_white_left, rook_white_right, self)
         self._white_king = white_king
+        self._kings[1] = white_king
 
         self.board[7] = [
             rook_white_left,
@@ -154,7 +144,3 @@ class GameState:
         for row in range(6, 8):
             for col in range(8):
                 self._white_pieces.append(self.board[row][col])
-
-    def reset(self) -> None:
-        """Reset the game state to initial position."""
-        self.setup_initial_position()

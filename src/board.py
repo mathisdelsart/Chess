@@ -22,10 +22,7 @@ class Board:
         pygame.draw.rect(self.screen, color, (display_tile[1] * SIZE_SQUARE, display_tile[0] * SIZE_SQUARE, SIZE_SQUARE, SIZE_SQUARE))
     
     def check_dark_tile(self, tile):
-        if tile[0] % 2 == 0:
-            return (tile[1] % 2 != 0)
-        else:
-            return (tile[1] % 2 == 0)
+        return (tile[0] + tile[1]) % 2 != 0
 
     def draw_board(self, mod_board):
         for i in range(ROW):

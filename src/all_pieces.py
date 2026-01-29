@@ -1,9 +1,8 @@
 """Concrete chess piece implementations."""
 from typing import Tuple, Optional, TYPE_CHECKING
 
-from src.piece import Piece
-from src.movement import (
-    get_linear_moves, get_knight_moves, get_king_moves,
+from src.piece import (
+    Piece, get_linear_moves, get_knight_moves, get_king_moves,
     ROOK_DIRECTIONS, BISHOP_DIRECTIONS, QUEEN_DIRECTIONS
 )
 from src.assets import (
