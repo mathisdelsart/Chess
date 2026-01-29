@@ -1,17 +1,27 @@
 """
 GameState class that encapsulates the complete state of a chess game.
-Replaces global variables in variables.py while maintaining backward compatibility.
 """
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.piece import Piece
     from src.all_pieces import King
 
 
-class GameState:
+def initialize_game() -> 'GameState':
     """
-    Encapsulates the complete state of a chess game.
+    Initialize or reset the game to starting position.
+
+    Returns:
+        The initialized GameState instance
+    """
+    game_state = GameState()
+    game_state.setup_initial_position()
+    return game_state
+
+
+class GameState:
+    """Encapsulates the complete state of a chess game.
 
     Attributes:
         board: 8x8 grid with Piece instances or None
@@ -81,10 +91,7 @@ class GameState:
                 self._black_pieces.remove(piece)
 
     def setup_initial_position(self) -> None:
-        """
-        Set up the initial chess position.
-        This is called after piece creation to populate the board.
-        """
+        """Set up the initial chess position."""
         # Import here to avoid circular imports
         from src.all_pieces import Rook, Knight, Bishop, Queen, King, Pawn
 

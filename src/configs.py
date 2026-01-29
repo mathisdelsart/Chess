@@ -1,6 +1,4 @@
-"""
-ALL THE CONSTANT CONFIGS
-"""
+"""Game configuration constants."""
 
 SIZE_SQUARE = 100
 ROW = 8

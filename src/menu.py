@@ -1,7 +1,4 @@
-"""
-Professional menu system for the Chess game.
-Clean, modern UI components for main menu and end game screen.
-"""
+"""Professional menu system for the Chess game."""
 import pygame
 from typing import Tuple, Callable
 

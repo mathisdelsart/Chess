@@ -1,6 +1,4 @@
-"""
-Main game loop and event handling for the Chess game.
-"""
+"""Main game loop and event handling."""
 import pygame
 
 from src.configs import SIZE_SQUARE, COLORS_MOVES_BOARD
@@ -166,8 +164,8 @@ class Game:
         self.player_color = 1
         self.board_flipped = False
 
-        # Reset game state using the new architecture
-        from src.variables import initialize_game
+        # Reset game state
+        from src.game_state import initialize_game
         new_game_state = initialize_game()
         
         self.piece._game_state = new_game_state
@@ -242,7 +240,7 @@ class Game:
                         self.sound_button.buttonUpdateClick(initial_pos_mouse)
                     else:
                         # Handle piece selection
-                        piece = self.piece.get_board_pieces()[tile_clicked[0]][tile_clicked[1]]
+                        piece = self.piece._game_state.board[tile_clicked[0]][tile_clicked[1]]
 
                         if piece is not None and not self.end_menu:
                             # Check if it's the correct player's turn
@@ -267,7 +265,7 @@ class Game:
         self.board.flipped = (self.main_menu.get_selected_color() == -1)
         self.board.draw_board(self.board_color_button.mod_board)
         self.board.draw_pieces(
-            self.piece.get_list_black_pieces() + self.piece.get_list_white_pieces()
+            self.piece._game_state.get_pieces_by_color(-1) + self.piece._game_state.get_pieces_by_color(1)
         )
 
         # Draw professional menu overlay
@@ -301,13 +299,13 @@ class Game:
 
         # Draw possible moves for selected piece
         if self.tile_pressed is not None:
-            selected_piece = self.piece.get_board_pieces()[self.tile_pressed[0]][self.tile_pressed[1]]
+            selected_piece = self.piece._game_state.board[self.tile_pressed[0]][self.tile_pressed[1]]
             if selected_piece is not None:
                 self.board.draw_possible_moves(selected_piece.available_moves)
 
         # Draw pieces
         self.board.draw_pieces(
-            self.piece.get_list_black_pieces() + self.piece.get_list_white_pieces()
+            self.piece._game_state.get_pieces_by_color(-1) + self.piece._game_state.get_pieces_by_color(1)
         )
 
         # Buttons are no longer displayed during the game (only in menu)
@@ -323,7 +321,7 @@ class Game:
 
     def update_moves_first_turn(self):
         """Update available moves for white pieces at game start."""
-        for piece in self.piece.get_list_white_pieces():
+        for piece in self.piece._game_state.get_pieces_by_color(1):
             piece.update_possible_moves()
 
     def _determine_final_sound(self, original_move_type: str, game_state_type: str) -> str:
@@ -387,7 +385,7 @@ class Game:
                         final_pos_mouse = pygame.mouse.get_pos()
                         self.tile_moved = self._mouse_to_tile(final_pos_mouse)
 
-                        piece_clicked = self.piece.get_board_pieces()[self.tile_pressed[0]][self.tile_pressed[1]]
+                        piece_clicked = self.piece._game_state.board[self.tile_pressed[0]][self.tile_pressed[1]]
 
                         # Valid move
                         if self.tile_moved in piece_clicked.available_moves:

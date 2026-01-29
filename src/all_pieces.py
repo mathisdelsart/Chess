@@ -1,7 +1,4 @@
-"""
-Concrete chess piece implementations.
-Each class represents a specific type of chess piece with its movement rules.
-"""
+"""Concrete chess piece implementations."""
 from typing import Tuple, Optional, TYPE_CHECKING
 
 from src.piece import Piece

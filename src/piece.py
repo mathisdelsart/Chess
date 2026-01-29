@@ -1,7 +1,4 @@
-"""
-Base Piece class for all chess pieces.
-Provides common functionality and interface for all piece types.
-"""
+"""Base Piece class for all chess pieces."""
 from typing import List, Tuple, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,32 +6,28 @@ if TYPE_CHECKING:
 
 
 class Piece:
-    """
-    Base class for all chess pieces.
-
-    This class provides:
-    - Common attributes (tile, color, image, available_moves)
-    - Backward compatibility methods for IA.py
-    - Basic move execution
-    - Game state access methods
-
-    Subclasses must implement update_possible_moves().
+    """Base class for all chess pieces.
+    
+    Attributes:
+        tile: Position as (row, col)
+        color: 1 for white, -1 for black
+        image: Pygame surface for rendering
+        first_move: True if piece hasn't moved yet
+        available_moves: List of legal move positions
     """
 
     def __init__(self, tile: Tuple[int, int] = None, color: int = None,
                  game_state: 'GameState' = None):
-        """
-        Initialize a piece.
+        """Initialize a piece.
 
         Args:
-            tile: Position as (row, col) tuple
+            tile: Position as (row, col)
             color: 1 for white, -1 for black
-            game_state: GameState instance (optional, uses global if not provided)
+            game_state: GameState instance
         """
         self.tile = tile
         self.color = color
         self.image = None
-        self.images = None
         self.first_move = True
         self.available_moves: List[Tuple[int, int]] = []
 
@@ -42,28 +35,9 @@ class Piece:
         if game_state is not None:
             self._game_state = game_state
         else:
-            # Create a new game state if none provided
             from src.game_state import GameState
             self._game_state = GameState()
             self._game_state.setup_initial_position()
-
-    # ========== Backward Compatibility Methods for IA.py ==========
-
-    def get_board_pieces(self) -> List[List[Optional['Piece']]]:
-        """Get the board from game state. Used by IA.py."""
-        return self._game_state.board
-
-    def get_list_black_pieces(self) -> List['Piece']:
-        """Get list of black pieces. Used by IA.py."""
-        return self._game_state.get_pieces_by_color(-1)
-
-    def get_list_white_pieces(self) -> List['Piece']:
-        """Get list of white pieces. Used by IA.py."""
-        return self._game_state.get_pieces_by_color(1)
-
-    def get_list_pieces(self, color_piece: int) -> List['Piece']:
-        """Get pieces of specified color. Used by IA.py."""
-        return self._game_state.get_pieces_by_color(color_piece)
 
     # ========== Piece Management Methods ==========
 
@@ -153,7 +127,7 @@ class Piece:
             The piece giving check, or None
         """
         opponent_king = self.get_king(-moved_piece_color)
-        for piece in self.get_list_pieces(moved_piece_color):
+        for piece in self._game_state.get_pieces_by_color(moved_piece_color):
             piece.update_possible_moves()
             if opponent_king.tile in piece.available_moves:
                 return piece
@@ -171,7 +145,7 @@ class Piece:
         Returns:
             True if king is in check
         """
-        for piece in self.get_list_pieces(-king.color):
+        for piece in self._game_state.get_pieces_by_color(-king.color):
             piece.update_possible_moves()
             if king.tile in piece.available_moves:
                 return True
@@ -187,7 +161,7 @@ class Piece:
         Returns:
             True if player has no legal moves
         """
-        for piece in self.get_list_pieces(piece_color):
+        for piece in self._game_state.get_pieces_by_color(piece_color):
             if piece.available_moves:
                 return False
         return True
@@ -237,10 +211,10 @@ class Piece:
         board_pieces = self._game_state.board
         opponent_king = self.get_king(-moved_piece_color)
 
-        for opponent_piece in self.get_list_pieces(-moved_piece_color):
+        for opponent_piece in self._game_state.get_pieces_by_color(-moved_piece_color):
             list_moves_to_remove = []
 
-            for piece in self.get_list_pieces(moved_piece_color):
+            for piece in self._game_state.get_pieces_by_color(moved_piece_color):
                 piece.update_possible_moves()
 
                 if opponent_piece.tile in piece.available_moves:
@@ -307,7 +281,7 @@ class Piece:
             Move type as string: "move", "check", "checkmate", or "stalemate"
         """
         # Update all opponent piece moves
-        for piece in self.get_list_pieces(-moved_piece.color):
+        for piece in self._game_state.get_pieces_by_color(-moved_piece.color):
             piece.update_possible_moves()
 
         opponent_king = self.get_king(-moved_piece.color)
@@ -323,7 +297,7 @@ class Piece:
 
         # If opponent king IS in check
         else:
-            for opponent_piece in self.get_list_pieces(-moved_piece.color):
+            for opponent_piece in self._game_state.get_pieces_by_color(-moved_piece.color):
                 if opponent_piece == self.get_king(-moved_piece.color):
                     self.remove_moves_of_king_that_chess_him(opponent_piece)
                 else:

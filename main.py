@@ -1,7 +1,4 @@
-"""
-Chess game entry point.
-Initializes pygame, loads assets, and starts the game loop.
-"""
+"""Chess game entry point."""
 import pygame
 
 from src.configs import WIDTH, HEIGHT

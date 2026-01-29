@@ -1,7 +1,4 @@
-"""
-Movement strategies for chess pieces.
-Provides reusable functions to calculate linear moves (used by Rook, Bishop, Queen).
-"""
+"""Movement strategies for chess pieces."""
 from typing import List, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
